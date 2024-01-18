@@ -276,6 +276,7 @@ ApplicationWindow {
                 icon.source: "images/undo-variant.png"
                 onPressed: {
                     py_MainApp.delete_spikes()
+                    py_MainApp.delete_artifacts()
                     py_MainApp.delete_patches()
                     partial_fourier_slider.value = partial_fourier_slider.default_value
                     zero_fill.checked = zero_fill.default_value
@@ -656,6 +657,37 @@ ApplicationWindow {
                                 py_MainApp.update_displays()
                                 }
                         }
+
+                        Button {
+                            id: btnArtifact
+                            text: qsTr("Add artifact")
+                            icon.source: "images/plus-thick.png"
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.fillWidth: true
+                            onPressed: {
+                                main_pane.state = "artifact_mode";
+                                drawer_right.modal && drawer_right.close();
+                                }
+                        }
+
+                        Button {
+                            text: qsTr("Clear")
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.fillWidth: true
+                            icon.source: "images/trash-can.png"
+                            onPressed: {
+                                py_MainApp.delete_artifacts()
+                                py_MainApp.update_displays()
+                                }
+                        }
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+                            icon.source: "images/undo-variant.png"
+                            onPressed: {
+                                py_MainApp.undo_artifact()
+                                py_MainApp.update_displays()
+                            }
+                        }
                     }
 
                     Label {
@@ -800,24 +832,35 @@ ApplicationWindow {
             states: [
                 State {
                     name: "spike_mode"
+                    PropertyChanges { target: btnArtifact; enabled: false }
                     PropertyChanges { target: btnSpike; enabled: false }
                     PropertyChanges { target: btnPatch; enabled: false }
                     PropertyChanges { target: kspace_mouse; cursorShape: Qt.CrossCursor }
                 },
                 State {
                     name: "patch_mode"
+                    PropertyChanges { target: btnArtifact; enabled: false }
+                    PropertyChanges { target: btnSpike; enabled: false }
+                    PropertyChanges { target: btnPatch; enabled: false }
+                    PropertyChanges { target: kspace_mouse; cursorShape: Qt.CrossCursor }
+                },
+                State {
+                    name: "artifact_mode"
+                    PropertyChanges { target: btnArtifact; enabled: false }
                     PropertyChanges { target: btnSpike; enabled: false }
                     PropertyChanges { target: btnPatch; enabled: false }
                     PropertyChanges { target: kspace_mouse; cursorShape: Qt.CrossCursor }
                 },
                 State {
                     name: "compress_mode"
+                    PropertyChanges { target: btnArtifact; enabled: false }
                     PropertyChanges { target: btnSpike; enabled: false }
                     PropertyChanges { target: btnPatch; enabled: false }
                     PropertyChanges { target: kspace_mouse; cursorShape: Qt.ArrowCursor }
                 },
                 State {
                     name: "normal_mode"
+                    PropertyChanges { target: btnArtifact; enabled: true }
                     PropertyChanges { target: btnSpike; enabled: true }
                     PropertyChanges { target: btnPatch; enabled: true }
                     PropertyChanges { target: kspace_mouse; cursorShape: Qt.ArrowCursor }
@@ -978,6 +1021,9 @@ ApplicationWindow {
                                 }
                                 else if (main_pane.state == "patch_mode") {
                                     py_MainApp.add_patch((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio, 2)
+                                }
+                                else if (main_pane.state == "artifact_mode") {
+                                    py_MainApp.add_artifact((mouseX-1)/wd_ratio, (mouseY-1)/ht_ratio)
                                 }
                                 py_MainApp.update_displays()
                                 main_pane.state = "normal_mode"

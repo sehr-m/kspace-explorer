@@ -143,6 +143,7 @@ class ImageManipulators:
         self.noise_map = np.zeros_like(self.kspace_abs)
         self.signal_to_noise = 30
         self.spikes = []
+        self.artifacts = []
         self.patches = []
 
         if is_image:
@@ -476,6 +477,21 @@ class ImageManipulators:
             kspace[spike] = spike_intensity
 
     @staticmethod
+    def apply_artifacts(kspace: np.ndarray, artifacts: list):
+        """Overlays artifacts to kspace
+
+        Apply artifacts (INSERT DEF HERE) to the kspace data at the specified
+        coordinates.
+
+        Parameters:
+            kspace (np.ndarray): Complex kspace ndarray
+            artifacts (list): coordinates for the artifacts (row, column)
+        """
+        # spike_intensity = np.max(kspace) * 2
+        # for spike in spikes:
+        #     kspace[spike] = spike_intensity
+
+    @staticmethod
     def apply_patches(kspace, patches: list):
         """Applies patches to kspace
 
@@ -484,7 +500,7 @@ class ImageManipulators:
 
          Parameters:
              kspace (np.ndarray): Complex kspace ndarray
-             patches (list): coordinates for the spikes (row, column, radius)
+             patches (list): coordinates for the patches (row, column, radius)
          """
         for patch in patches:
             x, y, size = patch[0], patch[1], patch[2]
@@ -730,6 +746,19 @@ class MainApp(QObject):
             mouse_y: click position on the y-axis
         """
         im.spikes.append((int(mouse_y), int(mouse_x)))
+    
+    @pyqtSlot(QVariant, QVariant, name="add_artifact")
+    def add_artifact(self, mouse_x, mouse_y):
+        """Inserts an artifact at a location given by the UI.
+
+        Values are saved in reverse order because NumPy's indexing conventions:
+        array[row (== y), column (== x)]
+
+        Parameters:
+            mouse_x: click position on the x-axis
+            mouse_y: click position on the y-axis
+        """
+        im.artifacts.append((int(mouse_y), int(mouse_x)))
 
     @pyqtSlot(QVariant, QVariant, QVariant, name="add_patch")
     def add_patch(self, mouse_x, mouse_y, radius):
@@ -750,6 +779,11 @@ class MainApp(QObject):
         """Deletes manually added kspace spikes"""
         im.spikes = []
 
+    @pyqtSlot(name="delete_artifacts")
+    def delete_artifacts(self):
+        """Deletes manually added kspace artifacts"""
+        im.artifacts = []
+
     @pyqtSlot(name="delete_patches")
     def delete_patches(self):
         """Deletes manually added kspace patches"""
@@ -766,6 +800,12 @@ class MainApp(QObject):
         """Deletes the last spike"""
         if im.spikes:
             del im.spikes[-1]
+
+    @pyqtSlot(name="undo_artifact")
+    def undo_artifact(self):
+        """Deletes the last artifact"""
+        if im.artifacts:
+            del im.artifacts[-1]
 
     @pyqtSlot(name="update_displays")
     def update_displays(self):
@@ -807,6 +847,9 @@ class MainApp(QObject):
 
         # 02 - Spikes
         im.apply_spikes(im.kspacedata, im.spikes)
+
+        # 02.5 - Artifacts
+        im.apply_artifacts(im.kspacedata, im.artifacts)
 
         # 03 - Patches
         im.apply_patches(im.kspacedata, im.patches)
