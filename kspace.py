@@ -1,6 +1,7 @@
 import sys
 import pathlib
 from uuid import uuid4
+from os import path
 
 import logging.config
 import PIL
@@ -16,7 +17,8 @@ from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 # Logging setup
-logging.config.fileConfig(fname='logging.conf', disable_existing_loggers=False)
+log_file_path = path.join(path.dirname(path.abspath(__file__)), 'logging.conf')
+logging.config.fileConfig(fname=log_file_path , disable_existing_loggers=False)
 log = logging.getLogger(__name__)
 if len(sys.argv) > 1:
     log.setLevel('DEBUG') if sys.argv[1] == '--log' else None
@@ -1002,8 +1004,8 @@ if __name__ == "__main__":
     im = ImageManipulators(open_file(default_image), is_image=True)
 
     # Loading GUI file
-    # engine.load('ui_source/ui.qml')
-    engine.load(QUrl('qrc:/ui.qml'))
+    engine.load('ui_source/ui.qml')
+    # engine.load('ui.qml')
 
     win = engine.rootObjects()[0]
     py_mainapp = MainApp(ctx, win)
